@@ -1,0 +1,485 @@
+User Entity
+'''''''''''''''''
+
+
+package com.vits.entity;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
+@Entity
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String username;
+    private String password;
+	public Long getId() {
+		return id;
+	}
+	public void setId(Long id) {
+		this.id = id;
+	}
+	public String getUsername() {
+		return username;
+	}
+	public void setUsername(String username) {
+		this.username = username;
+	}
+	public String getPassword() {
+		return password;
+	}
+	public void setPassword(String password) {
+		this.password = password;
+	}
+	@Override
+	public String toString() {
+		return "User [id=" + id + ", username=" + username + ", password=" + password + "]";
+	}
+	public User(Long id, String username, String password) {
+		super();
+		this.id = id;
+		this.username = username;
+		this.password = password;
+	}
+    
+    public User() {
+    	
+    }
+}
+
+
+
+
+
+
+
+
+
+Post  Entity
+'''''''''''''''''''
+
+
+package com.vits.entity;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.xml.stream.events.Comment;
+
+@Entity
+public class Post {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String title;
+    private String content;
+    
+    @ManyToOne
+    private User author;
+    
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL)
+    private List<Comment> comments = new ArrayList<>();
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
+	public String getContent() {
+		return content;
+	}
+
+	public void setContent(String content) {
+		this.content = content;
+	}
+
+	public User getAuthor() {
+		return author;
+	}
+
+	public void setAuthor(User author) {
+		this.author = author;
+	}
+
+	public List<Comment> getComments() {
+		return comments;
+	}
+
+	public void setComments(List<Comment> comments) {
+		this.comments = comments;
+	}
+
+	@Override
+	public String toString() {
+		return "Post [id=" + id + ", title=" + title + ", content=" + content + ", author=" + author + ", comments="
+				+ comments + "]";
+	}
+
+	public Post(Long id, String title, String content, User author, List<Comment> comments) {
+		super();
+		this.id = id;
+		this.title = title;
+		this.content = content;
+		this.author = author;
+		this.comments = comments;
+	}
+    
+    public Post() {
+    	
+    }
+}
+
+
+
+
+
+
+
+Comment entity
+''''''''''''''''''''
+
+package com.vits.entity;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+
+@Entity
+public class Comment {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String text;
+    
+    @ManyToOne
+    private Post post;
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public String getText() {
+		return text;
+	}
+
+	public void setText(String text) {
+		this.text = text;
+	}
+
+	public Post getPost() {
+		return post;
+	}
+
+	public void setPost(Post post) {
+		this.post = post;
+	}
+
+	@Override
+	public String toString() {
+		return "Comment [id=" + id + ", text=" + text + ", post=" + post + "]";
+	}
+
+	public Comment(Long id, String text, Post post) {
+		super();
+		this.id = id;
+		this.text = text;
+		this.post = post;
+	}
+    
+    public Comment() {
+    	
+    }
+}
+
+
+
+
+
+
+
+Comment controller:
+''''''''''''''''''''
+
+package com.vits.controller;
+
+import java.util.List;
+
+import javax.xml.stream.events.Comment;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.vits.Service.CommentService;
+
+@RestController
+@RequestMapping("/api/comments")
+public class CommentController {
+    private final CommentService commentService;
+
+    @Autowired
+    public CommentController(CommentService commentService) {
+        this.commentService = commentService;
+    }
+
+    @PostMapping
+    public ResponseEntity<String> createComment(@RequestBody Comment comment) {
+        commentService.createComment(comment);
+        return ResponseEntity.ok("Comment created successfully.");
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Comment> getCommentById(@PathVariable Long id) {
+        Comment comment = commentService.getCommentById(id);
+        return ResponseEntity.ok(comment);
+    }
+
+    @GetMapping("/post/{postId}")
+    public ResponseEntity<List<Comment>> getCommentsByPostId(@PathVariable Long postId) {
+        List<Comment> comments = commentService.getCommentsByPostId(postId);
+        return ResponseEntity.ok(comments);
+    }
+
+    // Add more comment-related endpoints as needed
+}
+
+
+
+
+
+
+
+Post controller:
+''''''''''''''''''
+
+
+package com.vits.controller;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.vits.Service.PostService;
+import com.vits.entity.Post;
+
+@RestController
+@RequestMapping("/api/posts")
+public class PostController {
+    private final PostService postService;
+
+    @Autowired
+    public PostController(PostService postService) {
+        this.postService = postService;
+    }
+
+    @PostMapping
+    public ResponseEntity<String> createPost(@RequestBody Post post) {
+        postService.createPost(post);
+        return ResponseEntity.ok("Post created successfully.");
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Post> getPostById(@PathVariable Long id) {
+        Post post = postService.getPostById(id);
+        return ResponseEntity.ok(post);
+    }
+    
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<Post>> getPostsByUserId(@PathVariable Long userId) {
+        List<Post> posts = postService.getPostsByUserId(userId);
+        return ResponseEntity.ok(posts);
+    }
+
+    // Add more post-related endpoints as needed
+}
+
+
+
+
+
+
+
+User Controller:
+''''''''''''''''''
+
+
+package com.vits.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.vits.Service.UserService;
+import com.vits.entity.User;
+
+
+
+@RestController
+@RequestMapping("/api/users")
+public class UserController {
+    private final UserService userService;
+
+    @Autowired
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<String> registerUser(@RequestBody User user) {
+        userService.registerUser(user);
+        return ResponseEntity.ok("User registered successfully.");
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<User> getUserById(@PathVariable Long id) {
+        User user = userService.getUserById(id);
+        return ResponseEntity.ok(user);
+    }
+
+    // Add more user-related endpoints as needed
+}
+
+
+
+
+User Repository:
+'''''''''''''''''''
+package com.vits.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import com.vits.entity.User;
+
+@Repository
+public interface UserRepository extends JpaRepository<User, Long> {
+    User findByUsername(String username);
+    User registerUser(String username);
+    User getUserById(long id);
+}
+
+
+
+
+
+Post Repository:
+''''''''''''''''''
+
+
+package com.vits.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import com.vits.entity.Post;
+
+@Repository
+public interface PostRepository extends JpaRepository<Post, Long> {
+}
+
+
+
+
+
+Comment Controller:
+'''''''''''''''''''''''
+
+package com.vits.repository;
+
+import javax.xml.stream.events.Comment;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface CommentRepository extends JpaRepository<Comment, Long> {
+	
+}
+
+
+
+
+
+application.properties:
+'''''''''''''''''''''''''
+
+
+
+# Spring Data Source Configuration
+spring.datasource.url=jdbc:mysql://localhost:3306/sys
+spring.datasource.username=root
+spring.datasource.password=sailajab
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+# Hibernate Configuration
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL5InnoDBDialect
+spring.jpa.hibernate.ddl-auto=update
+
+# Thymeleaf Configuration
+spring.thymeleaf.prefix=classpath:/templates/
+spring.thymeleaf.suffix=.html
+
+# Server Port
+server.port=8080
+
+# Logging Configuration
+logging.level.org.springframework=INFO
+logging.level.com.yourproject=DEBUG
+
+# Security Configuration (if using Spring Security)
+# spring.security.user.name=admin
+# spring.security.user.password=adminpassword
+
+# Custom Application Properties
+# myapp.property=some_value
+
+
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.hibernate.ddl-auto=create
+
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
